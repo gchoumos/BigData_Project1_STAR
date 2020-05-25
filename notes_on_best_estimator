@@ -1,0 +1,113 @@
+best - description only
+-----------------------
+accuracy:    0.975  -  0.975  -  0.972   -   97.461%
+f1:          0.724  -  0.710  -  0.701   -   71.618%
+precision:   0.777  -  0.803  -  0.737   -   78.193%
+recall:      0.677  -  0.637  -  0.668   -   66.168%
+
+
+best - description and company_profile
+--------------------------------------
+accuracy:      97.545%  97.573  97.567  97.668
+f1:            76.540%  76.823  76.867  77.528
+precision:     72.818%  73.179  73.033  74.403
+recall:        81.293%  81.524  81.871  81.640
+
+                    +903      +239    +531
+
+
+best - description, company_profile and requirements
+----------------------------------------------------
+f1: 78.306%
+accuracy: 97.819%
+precision: 76.757%
+recall: 80.252%
+
+f1: 78.458%
+accuracy: 97.830%
+precision: 76.741%
+recall: 80.599%
+
+f1: 78.684%
+accuracy: 97.841%
+precision: 76.853%
+recall: 81.061%
+
+
+best - description, company_profile, requirements and benefits
+--------------------------------------------------------------
+f1: 79.531%
+accuracy: 97.947%
+precision: 78.121%
+recall: 81.292%
+
+f1: 79.544%
+accuracy: 97.947%
+precision: 78.025%
+recall: 81.407%
+
+
+best - description, company_profile, requirements, benefits and title
+---------------------------------------------------------------------
+f1: 80.433%
+accuracy: 98.076%
+precision: 79.932%
+recall: 81.059%
+
+f1: 80.665%
+accuracy: 98.098%
+precision: 80.184%
+recall: 81.290%
+
+f1: 80.604%
+accuracy: 98.087%
+precision: 79.818%
+recall: 81.522%
+
+
+best - description, company_profile, requirements, benefits, title, dep_ind_fun
+-------------------------------------------------------------------------------
+f1: 81.330%
+accuracy: 98.177%
+precision: 81.389%
+recall: 81.407%
+
+
+best - description, company_profile, requirements, benefits, title, dep_ind_fun and exp_edu
+-------------------------------------------------------------------------------------------
+f1: 80.184%
+accuracy: 98.037%
+precision: 79.421%
+recall: 81.176%
+
+
+best - description, company_profile, requirements, benefits, title, dep_ind_fun and employment_type
+---------------------------------------------------------------------------------------------------
+f1: 81.120%
+accuracy: 98.126%
+precision: 80.273%
+recall: 82.215%
+
+
+best - description, company_profile, requirements, benefits, title, dep_ind_fun, employment_type and telecommuting
+------------------------------------------------------------------------------------------------------------------
+f1: 81.255%
+accuracy: 98.143%
+precision: 80.534%
+recall: 82.215%
+
+f1: 82.575%
+accuracy: 98.249%
+precision: 80.336%
+recall: 85.218%
+
+f1: 82.719%
+accuracy: 98.283%
+precision: 81.232%
+recall: 84.525%
+
+f1: 83.259%
+accuracy: 98.328%
+precision: 81.596%
+recall: 85.334%
+
