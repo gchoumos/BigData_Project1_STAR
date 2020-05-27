@@ -111,3 +111,19 @@ accuracy: 98.328%
 precision: 81.596%
 recall: 85.334%
 
+------------------
+------------------
+- Random Forests -
+------------------
+------------------
+f1: 68.864%
+accuracy: 97.645%
+precision: 95.969%
+recall: 53.811%
+
+With entropy, instead of gini
+-----------------------------
+f1: 71.537%
+accuracy: 97.841%
+precision: 98.240%
+recall: 56.468%

@@ -29,9 +29,8 @@ def preprocess_text(jobs,colname='description'):
     jobs = jobs.replace(to_replace=punct,value=' ',regex=True)
     print("Converting to lower case...")
     jobs[colname] = jobs[colname].str.lower()
-    ####
-    ## Stopwords are being removed as part of the pipeline step: CountVectorizer
-    ####
+    # Stopwords are being removed as part of the pipeline step: CountVectorizer
+    # Removal of digit-only words was dropped because it made the results slightly worse
     # print("Removing digit-only words...")
     # jobs[[colname]] = jobs[[colname]].replace([r'\b[0-9]+\b'],' ',regex=True)
     print("Removing words of length 1 (occured after punctuation replacement)...")
@@ -116,6 +115,8 @@ scorers = {
     'f1': f1_scorer
 }
 
+# n_jobs == -1 to use all processors. You can change it to 1 if you feel like the machine becomes
+# unresponsive (it does but training is quite fast for this case)
 grid_search = GridSearchCV(pipeline, parameters, cv=3, n_jobs=-1, verbose=1, scoring=scorers, refit='f1')
 grid_search.fit(jobs,jobs.fraudulent)
 
@@ -244,6 +245,28 @@ jobs['benefits_len'] = jobs.benefits.apply(lambda x: len(x))
 # Has Company Logo - No NaNs
 # Has Questions = No NaNs
 
+
+##
+######
+##########
+##############
+##################
+######################
+##########################
+##########################
+## Logistic Regressions ##
+##########################
+##########################
+######################
+##################
+##############
+##########
+######
+##
+#
+
+threshold_logreg = None
+
 pipeline = Pipeline([
     ('union', FeatureUnion(
         transformer_list=[
@@ -252,7 +275,7 @@ pipeline = Pipeline([
                 ('selector', ItemSelector(key='description')),
                 ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
                 ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
-                ('sfm_desc_uni', SelectFromModel(desc_logreg,threshold=None)),
+                ('sfm_desc_uni', SelectFromModel(desc_logreg,threshold=threshold_logreg)),
             ])),
 
             # Description bigrams
@@ -260,7 +283,7 @@ pipeline = Pipeline([
                 ('selector', ItemSelector(key='description')),
                 ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(2,2))),
                 ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
-                ('sfm_desc_bi', SelectFromModel(desc_logreg,threshold=None)),
+                ('sfm_desc_bi', SelectFromModel(desc_logreg,threshold=threshold_logreg)),
             ])),
 
             # Company Profile unigrams
@@ -268,7 +291,7 @@ pipeline = Pipeline([
                 ('selector', ItemSelector(key='company_profile')),
                 ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
                 ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
-                ('sfm_comp_prof_uni', SelectFromModel(desc_logreg,threshold=None)),
+                ('sfm_comp_prof_uni', SelectFromModel(desc_logreg,threshold=threshold_logreg)),
             ])),
 
             # Company Profile bigrams
@@ -276,7 +299,7 @@ pipeline = Pipeline([
                 ('selector', ItemSelector(key='company_profile')),
                 ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(2,2))),
                 ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
-                ('sfm_comp_prof_bi', SelectFromModel(desc_logreg,threshold=None)),
+                ('sfm_comp_prof_bi', SelectFromModel(desc_logreg,threshold=threshold_logreg)),
             ])),
 
             # Requirements unigrams
@@ -284,7 +307,7 @@ pipeline = Pipeline([
                 ('selector', ItemSelector(key='requirements')),
                 ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
                 ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
-                ('sfm_req_uni', SelectFromModel(desc_logreg,threshold=None)),
+                ('sfm_req_uni', SelectFromModel(desc_logreg,threshold=threshold_logreg)),
             ])),
 
             # Benefits unigrams
@@ -292,7 +315,7 @@ pipeline = Pipeline([
                 ('selector', ItemSelector(key='benefits')),
                 ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
                 ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
-                ('sfm_ben_uni', SelectFromModel(desc_logreg,threshold=None)),
+                ('sfm_ben_uni', SelectFromModel(desc_logreg,threshold=threshold_logreg)),
             ])),
 
             # Title unigrams
@@ -300,7 +323,7 @@ pipeline = Pipeline([
                 ('selector', ItemSelector(key='title')),
                 ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
                 ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
-                ('sfm_tit_uni', SelectFromModel(desc_logreg,threshold=None)),
+                ('sfm_tit_uni', SelectFromModel(desc_logreg,threshold=threshold_logreg)),
             ])),
 
             # Department, Industry and Function combined feature - Unigrams
@@ -308,7 +331,7 @@ pipeline = Pipeline([
                 ('selector', ItemSelector(key='dep_ind_fun')),
                 ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
                 ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
-                ('sfm_dep_ind_fun_uni', SelectFromModel(desc_logreg,threshold=None)),
+                ('sfm_dep_ind_fun_uni', SelectFromModel(desc_logreg,threshold=threshold_logreg)),
             ])),
 
             # Employment type - Unigrams
@@ -316,19 +339,13 @@ pipeline = Pipeline([
                 ('selector', ItemSelector(key='employment_type')),
                 ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
                 ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
-                ('sfm_empl_uni', SelectFromModel(desc_logreg,threshold=None)),
+                ('sfm_empl_uni', SelectFromModel(desc_logreg,threshold=threshold_logreg)),
             ])),
 
             # Telecommuting
             ('telecommuting', Pipeline([
                 ('selector', ItemSelector(key='telecommuting')),
-                ('sfm_tel', SelectFromModel(desc_logreg,threshold=None)),
-            ])),
-
-            # Length of benefits
-            ('benefits_len', Pipeline([
-                ('selector', ItemSelector(key='benefits_len')),
-                ('sfm_benlen', SelectFromModel(desc_logreg,threshold=None)),
+                ('sfm_tel', SelectFromModel(desc_logreg,threshold=threshold_logreg)),
             ])),
 
         ],
@@ -387,17 +404,180 @@ grid_search.fit(jobs,jobs.fraudulent)
 
 # Display the (best) score of the model and parameters.
 # print("Best parameters to optimise f1 score: {0}".format(grid_search.best_params_))
-print("#########################################################")
-print("# SCORES - All selected features (original and derived) #")
-print("#########################################################")
+print("###############################################################################")
+print("# SCORES - Logstic Regressions - All selected features (original and derived) #")
+print("###############################################################################")
 print("f1: {0:.3f}%".format(grid_search.best_score_*100))
 print("accuracy: {0:.3f}%".format(grid_search.cv_results_['mean_test_accuracy'][0]*100))
 print("precision: {0:.3f}%".format(grid_search.cv_results_['mean_test_precision'][0]*100))
 print("recall: {0:.3f}%".format(grid_search.cv_results_['mean_test_recall'][0]*100))
 
-import pdb
-pdb.set_trace()
-######################
-######################
-######################
 
+##
+######
+##########
+##############
+##################
+######################
+##########################
+##########################
+## Random Forests ##
+##########################
+##########################
+######################
+##################
+##############
+##########
+######
+##
+#
+
+from sklearn.ensemble import RandomForestClassifier
+
+# Try balanced_subsample for the class_weight parameter
+# Try entropy as well for the criterion parameter
+randfor = RandomForestClassifier(
+    class_weight='balanced',
+    criterion='entropy'
+)
+
+randfor_thres = None
+
+pipeline = Pipeline([
+    ('union', FeatureUnion(
+        transformer_list=[
+            # Description unigrams
+            ('desc_unigrams', Pipeline([
+                ('selector', ItemSelector(key='description')),
+                ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
+                ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
+                ('sfm_desc_uni', SelectFromModel(randfor,threshold=randfor_thres)),
+            ])),
+
+            # Comment bigrams
+            ('desc_bigrams', Pipeline([
+                ('selector', ItemSelector(key='description')),
+                ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(2,2))),
+                ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
+                ('sfm_desc_bi', SelectFromModel(randfor,threshold=randfor_thres)),
+            ])),
+
+            # Company Profile unigrams
+            ('comp_prof_unigrams', Pipeline([
+                ('selector', ItemSelector(key='company_profile')),
+                ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
+                ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
+                ('sfm_comp_prof_uni', SelectFromModel(randfor,threshold=randfor_thres)),
+            ])),
+
+            # Company Profile bigrams
+            ('comp_prof_bigrams', Pipeline([
+                ('selector', ItemSelector(key='company_profile')),
+                ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(2,2))),
+                ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
+                ('sfm_comp_prof_bi', SelectFromModel(randfor,threshold=randfor_thres)),
+            ])),
+
+            # Requirements unigrams
+            ('req_unigrams', Pipeline([
+                ('selector', ItemSelector(key='requirements')),
+                ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
+                ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
+                ('sfm_req_uni', SelectFromModel(randfor,threshold=randfor_thres)),
+            ])),
+
+            # Benefits unigrams
+            ('ben_unigrams', Pipeline([
+                ('selector', ItemSelector(key='benefits')),
+                ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
+                ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
+                ('sfm_ben_uni', SelectFromModel(randfor,threshold=randfor_thres)),
+            ])),
+
+            # Title unigrams
+            ('tit_unigrams', Pipeline([
+                ('selector', ItemSelector(key='title')),
+                ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
+                ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
+                ('sfm_tit_uni', SelectFromModel(randfor,threshold=randfor_thres)),
+            ])),
+
+            # Department, Industry and Function combined feature - Unigrams
+            ('dep_ind_fun_unigrams', Pipeline([
+                ('selector', ItemSelector(key='dep_ind_fun')),
+                ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
+                ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
+                ('sfm_dep_ind_fun_uni', SelectFromModel(randfor,threshold=randfor_thres)),
+            ])),
+
+            # Employment type - Unigrams
+            ('empl_unigrams', Pipeline([
+                ('selector', ItemSelector(key='employment_type')),
+                ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
+                ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
+                ('sfm_empl_uni', SelectFromModel(randfor,threshold=randfor_thres)),
+            ])),
+
+            # Telecommuting
+            ('telecommuting', Pipeline([
+                ('selector', ItemSelector(key='telecommuting')),
+                ('sfm_tel', SelectFromModel(randfor,threshold=randfor_thres)),
+            ])),
+
+        ],
+
+        # Weight components in FeatureUnion - Here are the optimals
+        transformer_weights={
+            'desc_unigrams': 1.6,
+            'desc_bigrams':  0.9,
+            'comp_prof_unigrams': 1.30,
+            'comp_prof_bigrams': 1.00,
+            'req_unigrams': 0.8,
+            'ben_unigrams': 0.9,
+            'tit_unigrams': 1.2,
+            'dep_ind_fun_unigrams': 0.60,
+            'empl_unigrams': 1.0,
+            'telecommuting': 0.7,
+        },
+    )),
+
+    ('logr', randfor),
+])
+
+# We have already selected the parameters for which the GridSearch provided the best results.
+# Just leaving this here for visibility. Note that for more than one values, separate fits will
+# be run to find out the best combination of parameters.
+# Have already tested some values and the following constitute a good set
+parameters = {
+    'union__desc_unigrams__vect__min_df': [0.00001],
+    'union__desc_bigrams__vect__min_df': [0.0001],
+    'union__desc_unigrams__vect__max_df': [0.4],
+    'union__desc_bigrams__vect__max_df': [0.6],
+    'union__comp_prof_unigrams__vect__min_df': [0.00001],
+    'union__comp_prof_bigrams__vect__min_df': [0.0001],
+    'union__comp_prof_unigrams__vect__max_df': [0.4],
+    'union__comp_prof_bigrams__vect__max_df': [0.6],
+    'union__req_unigrams__vect__min_df': [0.00001],
+    'union__req_unigrams__vect__max_df': [0.4],
+    'union__ben_unigrams__vect__min_df': [0.00001],
+    'union__ben_unigrams__vect__max_df': [0.5],
+    'union__tit_unigrams__vect__min_df': [0.00001],
+    'union__tit_unigrams__vect__max_df': [0.5],
+    'union__dep_ind_fun_unigrams__vect__min_df': [0.00001],
+    'union__dep_ind_fun_unigrams__vect__max_df': [0.5],
+    'union__empl_unigrams__vect__min_df': [0.00001],
+    'union__empl_unigrams__vect__max_df': [0.5],
+}
+
+grid_search = GridSearchCV(pipeline, parameters, cv=3, n_jobs=-1, verbose=1, scoring=scorers, refit='f1')
+grid_search.fit(jobs,jobs.fraudulent)
+
+# Display the (best) score of the model and parameters.
+print("Best parameters to optimise f1 score: {0}".format(grid_search.best_params_))
+print("##########################################################################")
+print("# SCORES - Random Forests - All selected features (original and derived) #")
+print("##########################################################################")
+print("f1: {0:.3f}%".format(grid_search.best_score_*100))
+print("accuracy: {0:.3f}%".format(grid_search.cv_results_['mean_test_accuracy'][0]*100))
+print("precision: {0:.3f}%".format(grid_search.cv_results_['mean_test_precision'][0]*100))
+print("recall: {0:.3f}%".format(grid_search.cv_results_['mean_test_recall'][0]*100))
