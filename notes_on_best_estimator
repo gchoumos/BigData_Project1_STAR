@@ -15,6 +15,12 @@ recall:        81.293%  81.524  81.871  81.640
 
                     +903      +239    +531
 
+--- with threshold = 1.25*mean
+f1: 71.829%
+accuracy: 97.483%
+precision: 78.525%
+recall: 66.284%
+
 
 best - description, company_profile and requirements
 ----------------------------------------------------
@@ -127,3 +133,8 @@ f1: 71.537%
 accuracy: 97.841%
 precision: 98.240%
 recall: 56.468%
+
+f1: 71.297%
+accuracy: 97.824%
+precision: 98.246%
+recall: 56.123%

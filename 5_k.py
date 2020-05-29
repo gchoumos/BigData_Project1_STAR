@@ -61,6 +61,9 @@ desc_logreg = LogisticRegression(
     max_iter=300,
     class_weight='balanced')
 
+# The threshold to keep features based on their importance
+threshold="1.25*mean"
+
 pipeline = Pipeline([
     ('union', FeatureUnion(
         transformer_list=[
@@ -69,7 +72,7 @@ pipeline = Pipeline([
                 ('selector', ItemSelector(key='description')),
                 ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(1,1))),
                 ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
-                ('sfm_desc_uni', SelectFromModel(desc_logreg,threshold=None)),
+                ('sfm_desc_uni', SelectFromModel(desc_logreg,threshold=threshold)),
             ])),
 
             # Comment bigrams
@@ -77,7 +80,7 @@ pipeline = Pipeline([
                 ('selector', ItemSelector(key='description')),
                 ('vect', CountVectorizer(decode_error='ignore', stop_words='english',ngram_range=(2,2))),
                 ('tfidf', TfidfTransformer(norm='l2',sublinear_tf=True)),
-                ('sfm_desc_bi', SelectFromModel(desc_logreg,threshold=None)),
+                ('sfm_desc_bi', SelectFromModel(desc_logreg,threshold=threshold)),
             ])),
 
         ],
@@ -90,7 +93,7 @@ pipeline = Pipeline([
         },
     )),
 
-    ('logr', LogisticRegression(penalty='l2', tol=0.0001, class_weight='balanced')),
+    ('logr', LogisticRegression(penalty='l2', tol=0.0001, solver='lbfgs', class_weight='balanced')),
 ])
 
 # We have already selected the parameters for which the GridSearch provided the best results.
@@ -265,7 +268,7 @@ jobs['benefits_len'] = jobs.benefits.apply(lambda x: len(x))
 ##
 #
 
-threshold_logreg = None
+threshold_logreg = "mean"
 
 pipeline = Pipeline([
     ('union', FeatureUnion(
@@ -373,7 +376,7 @@ pipeline = Pipeline([
         },
     )),
 
-    ('logr', LogisticRegression(penalty='l2',max_iter=300, tol=0.001,class_weight='balanced')),
+    ('logr', LogisticRegression(penalty='l2', solver='lbfgs', max_iter=300, tol=0.001,class_weight='balanced')),
 ])
 
 
@@ -404,9 +407,9 @@ grid_search.fit(jobs,jobs.fraudulent)
 
 # Display the (best) score of the model and parameters.
 # print("Best parameters to optimise f1 score: {0}".format(grid_search.best_params_))
-print("###############################################################################")
-print("# SCORES - Logstic Regressions - All selected features (original and derived) #")
-print("###############################################################################")
+print("################################################################################")
+print("# SCORES - Logistic Regressions - All selected features (original and derived) #")
+print("################################################################################")
 print("f1: {0:.3f}%".format(grid_search.best_score_*100))
 print("accuracy: {0:.3f}%".format(grid_search.cv_results_['mean_test_accuracy'][0]*100))
 print("precision: {0:.3f}%".format(grid_search.cv_results_['mean_test_precision'][0]*100))
@@ -438,10 +441,12 @@ from sklearn.ensemble import RandomForestClassifier
 # Try entropy as well for the criterion parameter
 randfor = RandomForestClassifier(
     class_weight='balanced',
-    criterion='entropy'
+    criterion='entropy',
+    n_estimators=100,
+    random_state=321
 )
 
-randfor_thres = None
+randfor_thres = "mean"
 
 pipeline = Pipeline([
     ('union', FeatureUnion(
@@ -581,3 +586,5 @@ print("f1: {0:.3f}%".format(grid_search.best_score_*100))
 print("accuracy: {0:.3f}%".format(grid_search.cv_results_['mean_test_accuracy'][0]*100))
 print("precision: {0:.3f}%".format(grid_search.cv_results_['mean_test_precision'][0]*100))
 print("recall: {0:.3f}%".format(grid_search.cv_results_['mean_test_recall'][0]*100))
+
+
